@@ -15,7 +15,7 @@ categories: android test
 ### 基于 X86 架构的 Android 代码单元测试
 只使用 JUnit 是不能在 X86 主机上测试引用到 Android SDK 的代码的，因为 SDK 中存在大量的本地方法；如果选择在真机 / 模拟器上运行集成测试，那么在 X86 JVM 上运行测试在速度上的巨大优势就丧失了。Robolectric 提供了一套 Android SDK 在 X86 主机上的 Mock 实现，使几乎所有 Android 项目代码可以在开发机或者 CI 环境的 JVM 中被迅速地测试。
 ### Mock 对象
-Robolectric 的 [Shadow 功能](#Shadow)提供给开发者编写 Mock 对象的能力，不需再额外引入诸如 [Mockito](http://site.mockito.org/) 之类的框架。
+Robolectric 的 [Shadow 功能](#shadow)提供给开发者编写 Mock 对象的能力，不需再额外引入诸如 [Mockito](http://site.mockito.org/) 之类的框架。
 
 ## 使用 Robolectric
 ### 测试运行器
@@ -35,15 +35,15 @@ Robolectric 支持数种配置测试的方法。
 
 #### 常用的可配置的项目
 
-项目名称|配置项名称|描述
-------|--------|---
-目标 SDK 级别|`sdk`、`minSdk`、`maxSdk`|默认情况下，Robolectric 会在清单文件的 `targetSdkVersion` 版本上运行测试，如果需要在不同的 SDK 级别上运行测试，可以指定 `sdk`、`minSdk` 和 `maxSdk`。注意，`sdk` 与后两个项目**不可同时存在于一个配置**中。
-清单文件路径|`manifest`|默认值是 `AndroidManifest.xml`（相对于当前目录）
-Application|`application`|默认情况下，Robolectric 会创建在清单文件中指定的 `Application` 类型，如果需要提供其它的 `Application`，可以通过该配置项来指定。
-构建配置|`constants`|由 Gradle 生成的构建配置 `class` 对象。
-[自定义 Shadow](#使用 Shadow)|`shadows`|自定义 Shadow 的 `class` 对象列表，用于创建 Mock 对象
-资源路径|`resourceDir`|默认值是 `res` （相对于清单文件目录）
-资产路径|`assetDir`|默认值是 `assets` （相对于清单文件目录）
+|项目名称|配置项名称|描述|
+|------|--------|---|
+|目标 SDK 级别|`sdk`、`minSdk`、`maxSdk`|默认情况下，Robolectric 会在清单文件的 `targetSdkVersion` 版本上运行测试，如果需要在不同的 SDK 级别上运行测试，可以指定 `sdk`、`minSdk` 和 `maxSdk`。注意，`sdk` 与后两个项目**不可同时存在于一个配置**中。|
+|清单文件路径|`manifest`|默认值是 `AndroidManifest.xml`（相对于当前目录）|
+|Application|`application`|默认情况下，Robolectric 会创建在清单文件中指定的 `Application` 类型，如果需要提供其它的 `Application`，可以通过该配置项来指定。|
+|构建配置|`constants`|由 Gradle 生成的构建配置 `class` 对象。|
+|[自定义 Shadow](#使用-shadow)|`shadows`|自定义 Shadow 的 `class` 对象列表，用于创建 Mock 对象|
+|资源路径|`resourceDir`|默认值是 `res` （相对于清单文件目录）|
+|资产路径|`assetDir`|默认值是 `assets` （相对于清单文件目录）|
 
 ### 测试 Activity
 Activity 是 Android 组件中最重要的一部分。Robolectric 的 `ActivityController` 流式 API 用于测试 Activity，可以用它来控制被测 Activity 的生命周期，并获得被测 Activity 的引用。类似的 API 还可以用来测试 Fragment 和 Service。
