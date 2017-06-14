@@ -1,4 +1,6 @@
-# Robolectric
+---
+title: Robolectric
+categories: android test
 ---
 ## 在 Android Studio 中使用 Robolectric
 1. 添加依赖到 `build.gradle` 中
@@ -55,7 +57,7 @@ activityController.resume();
 // assert it happened!
 ```
 #### 控制 Activity 布局 attach 到 Window 的时机
-在真机或模拟器上，Activity 的布局在 `Activity.onPostResume()` 后才会 attach 到 `Window` 上，在此之前布局中的视图都不可见，并且无法被点击。Robolectric 把这个时机的控制权交给的编写测试的开发者，在对 `ActivityController` 的流式调用中，在适当的时机调用 `visible()`，如下所示。
+在真机或模拟器上，Activity 的布局在 `Activity.onPostResume()` 后才会 attach 到 `Window` 上，在此之前布局中的视图都不可见，并且无法被点击。Robolectric 把这个时机的控制权交给的编写测试的开发者，在对 `ActivityController` 的流式调用中，在适当的时机调用 `visible()`，如下所示。
 
 ```java
 Activity activity = Robolectric.buildActivity(MyAwesomeActivity.class).create().start().resume().visible().get();
