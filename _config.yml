@@ -1,14 +1,13 @@
 title: Zhaoxuan Jiang's Blog
-email: jiangzhaoxuan94@gmail.com
+email: jiangzhaoxuan94#gmail.com
 description: > 
-  Some notes that I thought worth sharing with other developers, mainly Android development, written in Chinese.
+  Some notes, mainly related to Android development, which I thought worth sharing with other developers, written in Chinese.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 github_username: nocchijiang 
 
 # Build settings
 markdown: kramdown
-theme: minima
 gems:
   - jekyll-feed
 exclude:
