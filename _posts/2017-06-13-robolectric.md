@@ -8,7 +8,9 @@ tags: [Android, Test]
 ## 在 Android Studio 中使用 Robolectric
 1. 添加依赖到 `build.gradle` 中
 
-        testCompile 'org.robolectric:robolectric:3.3.2'
+    ```groovy
+    testCompile 'org.robolectric:robolectric:3.3.2'
+    ```
 
 2. 如果在**非 Windows 平台**上使用，修改 Run Configuration，在默认配置的 `Android JUnit` 项目中，修改 `Working directory` 为 `$MODULE_DIR`
 

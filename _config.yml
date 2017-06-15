@@ -7,7 +7,9 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 github_username: nocchijiang 
 
 # Build settings
-markdown: kramdown
+markdown: redcarpet
+redcarpet:
+  extensions: ["tables", "fenced_code_blocks", "strikethrough", "with_toc_data", "disable_indented_code_blocks"]
 gems:
   - jekyll-feed
 exclude:
