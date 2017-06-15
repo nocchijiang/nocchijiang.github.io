@@ -2,6 +2,8 @@
 title: Robolectric
 tags: android test
 ---
+* toc
+{:toc}
 ## 在 Android Studio 中使用 Robolectric
 1. 添加依赖到 `build.gradle` 中
 
