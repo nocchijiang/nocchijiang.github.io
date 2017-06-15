@@ -1,6 +1,6 @@
 ---
 title: Robolectric
-tags: android test
+tags: [Android, Test]
 ---
 * toc
 {:toc}
