@@ -1,6 +1,6 @@
 ---
 title: Robolectric
-categories: android test
+tags: android test
 ---
 ## 在 Android Studio 中使用 Robolectric
 1. 添加依赖到 `build.gradle` 中
