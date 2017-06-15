@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Robolectric
 tags: [Android, Test]
 ---
