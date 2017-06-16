@@ -3,13 +3,16 @@ layout: post
 title: RelativeLayout 实现分析
 tags: [Android, View]
 ---
+* toc
+{:toc}
 ## 布局参数
 `RelativeLayout` 的布局参数嵌套类与 `LinearLayout` 的类似，继承自 `ViewGroup.MarginLayoutParams` 。它承载了子视图间或子视图与此 `RelativeLayout` 的关系信息，这些关系信息在 `RelativeLayout.LayoutParams` 中被抽象为『规则（ Rule ）』。
 
 ```java
 public static class LayoutParams extends ViewGroup.MarginLayoutParams {
 
-    // 使用 int 数组承载所有可用的 RelativeLayout 规则信息。 VERB_COUNT 是一个定义在 RelativeLayout 中的常量，
+    // 使用 int 数组承载所有可用的 RelativeLayout 规则信息。 
+    // VERB_COUNT 是一个定义在 RelativeLayout 中的常量，
     // 在 SDK 25 中它的值是 22 。
     private int[] mRules = new int[VERB_COUNT];
  
@@ -26,7 +29,8 @@ public static class LayoutParams extends ViewGroup.MarginLayoutParams {
     public boolean alignWithParent;
  
     // 使用此布局参数的视图在 RelativeLayout 的测量过程中被确定的布局位置。
-    // 如果其值为 VALUE_NOT_SET （定义在 RelativeLayout 中的常量，值为 int 能表示的最小值），则说明具体的值应该通过关系推断得出。
+    // 如果其值为 VALUE_NOT_SET （定义在 RelativeLayout 中的常量，值为 
+    // Integer.MIN_VALUE），则说明具体的值应该通过关系推断得出。
     // 很快我们就会看到， RelativeLayout 的测量与布局事实上是同时完成的。
     private int mLeft, mTop, mRight, mBottom;
  
@@ -44,7 +48,7 @@ public static class LayoutParams extends ViewGroup.MarginLayoutParams {
         for (int i = 0; i < N; i++) {
             int attr = a.getIndex(i);
  
-            // 在这个构造器中可以看出，不同的规则通过固定的数组偏移定义存放到 mRules 中。这些偏移的定义位于 RelativeLayout 类中。
+            // 从这个构造器中可以看出，不同的规则通过固定的数组偏移定义存放到 mRules 中。这些偏移的定义位于 RelativeLayout 类中。
             switch (attr) {
                 case com.android.internal.R.styleable.RelativeLayout_Layout_layout_alignWithParentIfMissing:
                     alignWithParent = a.getBoolean(attr, false);
@@ -171,8 +175,8 @@ private static class DependencyGraph {
         View view;
 
         /**
-         * 依赖它的结点。这里虽然用 ArrayMap ，但值并不重要（下面就可以看到每次 put 操作传入的值都是 this），
-         * 实现者只是想利用它在空间上比 HashMap 更有效率的特性。
+         * 依赖它的结点。这里虽然用了一个 Map，但值并不重要
+         * （下面就可以看到每次 put 操作传入的值都是 this）。
          */
         final ArrayMap<Node, DependencyGraph> dependents =
                 new ArrayMap<Node, DependencyGraph>();
@@ -190,7 +194,7 @@ private static class DependencyGraph {
     private SparseArray<Node> mKeyNodes = new SparseArray<Node>();
 
     // 一个临时双向队列，用来维护拓扑排序算法每一趟结束后的临时『根结点』。
-    // 注意！它持有的并非图中真正的根结点，它只是拓扑排序中使用的临时数据结构。
+    // 它持有的并非图中真正的根结点，它只是拓扑排序中使用的临时数据结构。
     private ArrayDeque<Node> mRoots = new ArrayDeque<Node>();
 
     // 向图中添加一个视图。
@@ -209,12 +213,14 @@ private static class DependencyGraph {
     }
 
     /**
-     * 拓扑排序发生之处。按拓扑序排列图中的视图，结果传入第一个参数中。 sorted 数组的大小必须为 RelativeLayout 中子视图的个数。
+     * 拓扑排序发生之处。按拓扑序排列图中的视图，结果传入第一个参数中。
+     * sorted 数组的大小必须为 RelativeLayout 中子视图的个数。
      */
     void getSortedViews(View[] sorted, int... rules) {
-        // 首先寻找到图中的根结点。回忆拓扑排序算法，一个可行的算法就是从任一没有入边的顶点开始，将该顶点
-        // 以及该顶点的所有出边从图中删除，直至图中没有顶点或没有满足条件的顶点为止。可见 getSortedViews 
-        // 恰好就使用了这个简单易行的算法。
+        // 首先寻找到图中的根结点。
+        // 回忆拓扑排序算法，一个可行的算法就是从任一没有入边的顶点开始，将该顶点
+        // 以及该顶点的所有出边从图中删除，直至图中没有顶点或没有满足条件的顶点为止。
+        // 可见 getSortedViews 恰好就使用了这个简单易行的算法。
         final ArrayDeque<Node> roots = findRoots(rules);
         int index = 0;
 
@@ -238,14 +244,16 @@ private static class DependencyGraph {
                 // 将当前的『根结点』从此结点的依赖中删除，即 DAG 中删除『出边』。
                 dependencies.remove(key);
  
-                // 如果此结点已经没有依赖了，它就成为新的临时『根结点』。将其加入到临时根结点双向队列中。
+                // 如果此结点已经没有依赖了，它就成为新的临时『根结点』。
+                // 将其加入到临时根结点双向队列中。
                 if (dependencies.size() == 0) {
                     roots.add(dependent);
                 }
             }
         }
 
-        // 如果图中已经没有了『根结点』，而此时拓扑序列还没有装满所有的结点，则说明图中存在环，这违背了 RelativeLayout 的使用规则，直接抛出异常。
+        // 如果图中已经没有了『根结点』，而此时拓扑序列还没有装满所有的结点，
+        // 则说明图中存在环，这违背了 RelativeLayout 的使用规则，直接抛出异常。
         if (index < sorted.length) {
             throw new IllegalStateException("Circular dependencies cannot exist"
                     + " in RelativeLayout");
@@ -253,22 +261,24 @@ private static class DependencyGraph {
     }
 
     /**
-     * 这个方法的名字具有误导性，如果要笔者来取，应该取名为 buildGraphAndFindRoots 。没错，这个方法就是先构造 DAG ，后寻找根结点。
-     * 参数 rulesFilter 表示本次构造 DAG 只考察哪些规则（将这些规则作为 DAG 的『边』）。没有出现在 rulesFilter 中的规则在本次构造过程中被忽略。
+     * 这个方法的名字具有误导性，如果要笔者来取，应该取名为 buildGraphAndFindRoots。
+     * 没错，这个方法就是先构造 DAG，后寻找根结点。
+     * 参数 rulesFilter 表示本次构造 DAG 只考察哪些规则（将这些规则作为 DAG 的『边』）。
+     * 没有出现在 rulesFilter 中的规则在本次构造过程中被忽略。
      */
     private ArrayDeque<Node> findRoots(int[] rulesFilter) {
         final SparseArray<Node> keyNodes = mKeyNodes;
         final ArrayList<Node> nodes = mNodes;
         final int count = nodes.size();
        
-        // 清理图中的依赖关系引用，也就是删去 DAG 中的『边』。这个方法会根据传入的不同的规则被调用多次，
-        // 会构造出不同的 DAG 来，因此这些『边』需要被重新构造。
+        // 清理图中的依赖关系引用，也就是删去 DAG 中的『边』。
+        // 这个方法会根据传入的不同的规则被调用多次，会构造出不同的 DAG 来，
+        // 因此这些『边』需要被重新构造。
         for (int i = 0; i < count; i++) {
             final Node node = nodes.get(i);
             node.dependents.clear();
             node.dependencies.clear();
         }
-
  
         // 遍历图中的所有结点，即 RelativeLayout 中的所有子视图；构造 DAG 。
         for (int i = 0; i < count; i++) {
@@ -283,8 +293,9 @@ private static class DependencyGraph {
             for (int j = 0; j < rulesCount; j++) {
                 final int rule = rules[rulesFilter[j]];
  
-                // int 数组元素默认为 0 ，大于 0 则说明这个子视图配置了相应的规则，值就是此规则对应的依赖视图的 ID ；
-                // 小于 0 则说明这个规则是与对齐 RelativeLayout 相关的 alignParent* 或 center* 规则，
+                // int 数组元素默认为 0，大于 0 则说明这个子视图配置了相应的规则，
+                // 值就是此规则对应的依赖视图的 ID；小于 0 则说明这个规则是与对齐 
+                // RelativeLayout 相关的 alignParent* 或 center* 规则，
                 // 不是描述子视图之间的关系，故可以安全跳过。
                 if (rule > 0) {
  
@@ -295,9 +306,9 @@ private static class DependencyGraph {
                         continue;
                     }
  
-                    // 维护 DAG 的边关系。虽然这里看起来建立了一个依赖者与被依赖者的『双向』连接，
-                    // 但注意 dependents 和 dependencies 的语义是不同的，本质上它们仍然是单向边。
-                    // 维护反向关系是为了更便捷地完成后续的拓扑排序。
+                    // 维护 DAG 的边关系。虽然这里看起来建立了一个依赖者与被依赖者的
+                    // 『双向』连接，但注意 dependents 和 dependencies 的语义是不同的，
+                    // 本质上它们仍然是单向边。维护反向关系是为了更便捷地完成后续的拓扑排序。
                     dependency.dependents.put(node, this);
                     node.dependencies.put(rule, dependency);
                 }
@@ -325,8 +336,9 @@ private static class DependencyGraph {
 ### `onMeasure()`
 ```java
 protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    // mDirtyHierarchy 标记在 requestLayout() 中被置为 true ，它表示因为某种原因，需要重新对子视图做拓扑排序。
-    // 首次测量时， mDirtyHierarchy 已经是 true ，因为 RelativeLayout 中有子视图，
+    // mDirtyHierarchy 标记在 requestLayout() 中被置为 true，它表示因为某种原因，
+    // 需要重新对子视图做拓扑排序。
+    // 首次测量时， mDirtyHierarchy 已经是 true，因为 RelativeLayout 中有子视图，
     // 而 ViewGroup.addView() 中已经调用过 requestLayout() 了。
     if (mDirtyHierarchy) {
         mDirtyHierarchy = false;
@@ -335,7 +347,8 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         sortChildren();
     }
 
-    // myWidth 与 myHeight 存储的是 RelativeLayout 的测量规格尺寸（如果规格不是 UNSPECIFIED 的话）。
+    // myWidth 与 myHeight 存储的是 RelativeLayout 的测量规格尺寸
+    // （如果规格不是 UNSPECIFIED 的话）。
     int myWidth = -1;
     int myHeight = -1;
 
@@ -382,8 +395,9 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     boolean offsetHorizontalAxis = false;
     boolean offsetVerticalAxis = false;
 
-    // 只要测量规格模式不是 EXACTLY ，那么这个视图（RelativeLayout）的宽（高）就肯定被设为 WRAP_CONTENT。
-    // 具体模式是 AT_MOST ，还是 UNSPECIFIED ，则取决于 RelativeLayout 的父亲是什么。
+    // 只要测量规格模式不是 EXACTLY ，那么这个视图（RelativeLayout）的宽
+    // （高）就肯定被设为 WRAP_CONTENT。具体模式是 AT_MOST ，还是 UNSPECIFIED，
+    // 则取决于 RelativeLayout 的父亲是什么。
     final boolean isWrapContentWidth = widthMode != MeasureSpec.EXACTLY;
     final boolean isWrapContentHeight = heightMode != MeasureSpec.EXACTLY;
 
@@ -405,21 +419,23 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             int[] rules = params.getRules(layoutDirection);
 
             // 根据子视图的布局参数、 RelativeLayout 的测量宽度和经过 RTL 修正后的规则
-            // 完成该视图的 *初步* 横向布局（这里的『布局』并非指真正调用 child.layout() ，只是
-            // 提前为它们确定了要传入的 left, right 参数）。
+            // 完成该视图的 *初步* 横向布局（这里的『布局』并非指真正调用 child.layout() ，
+            // 只是提前为它们确定了要传入的 left, right 参数）。
             // 笔者建议读者现在就在下方找到此方法的实现阅读一下，非常简单、直白。
             applyHorizontalSizeRules(params, myWidth, rules);
             // 在水平方向测量这个孩子。它装配子视图布局参数的过程值得学习借鉴。
             measureChildHorizontal(child, params, myWidth, myHeight);
 
             // 为什么笔者刚刚要强调 applyHorizontalSizeRules 是完成初步布局呢？
-            // 看过了那个方法实现的读者应该明白，对于不存在规则的边，其 left / right 被设为了
-            // VALUE_NOT_SET ，而这个常量的值为 -1 ，它只是一个临时标记值，显然不能直接拿来
-            // 作为真正的布局参数。下面这个方法就会在测量了子视图的宽度后，消灭 VALUE_NOT_SET，
-            // 并且根据子视图是否配置水平居中属性，将其布局到 RelativeLayout 水平方向的中部。
+            // 看过了那个方法实现的读者应该明白，对于不存在规则的边，其 left / right 
+            // 被设为了 VALUE_NOT_SET，而这个常量的值为 -1，它只是一个临时标记值，
+            // 显然不能直接拿来作为真正的布局参数。
+            // 下面这个方法在测量了子视图的宽度后，消灭 VALUE_NOT_SET，并且根据
+            // 子视图是否配置水平居中属性，将其布局到 RelativeLayout 水平方向的中部。
  
-            // 如果这个子视图设为居中对齐或是右对齐，更新标记，表明如果 RelativeLayout 的宽度不是确定的，
-            // 在通过测量所有子视图确定 RelativeLayout 宽度后需要对这些子视图重新布局。
+            // 如果这个子视图设为居中对齐或是右对齐，更新标记，表明如果 RelativeLayout
+            // 的宽度不是确定的，在通过测量所有子视图确定 RelativeLayout 宽度后
+            // 需要对这些子视图重新布局。
             if (positionChildHorizontal(child, params, myWidth, isWrapContentWidth)) {
                 offsetHorizontalAxis = true;
             }
@@ -442,22 +458,24 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             // 这一次测量子视图就是最终的结果了，因为它的横、纵向的规则已经完全确定了。
             measureChild(child, params, myWidth, myHeight);
  
-            // 消灭 VALUE_NOT_SET ，尝试垂直居中，更新标记。与水平方向的 positionChildHorizontal 
-            // 意义是完全一致的。
+            // 消灭 VALUE_NOT_SET ，尝试垂直居中，更新标记。
+            // 与水平方向的 positionChildHorizontal 意义是完全一致的。
             if (positionChildVertical(child, params, myHeight, isWrapContentHeight)) {
                 offsetVerticalAxis = true;
             }
 
-            // 到这里，当前遍历到的这个子视图的测量过程完全结束，是时候根据它的尺寸来测量 RelativeLayout 自己了。
-            // 如果 RelativeLayout 的测量规格模式不是 EXACTLY ，则需要根据子视图大小来更新自己的大小。
-            // 首先的宽度。
+            // 到这里，当前遍历到的这个子视图的测量过程完全结束，是时候根据它的尺寸来测量
+            // RelativeLayout 自己了。如果 RelativeLayout 的测量规格模式不是 
+            // EXACTLY，则需要根据子视图大小来更新自己的大小。
+            // 首先是宽度。
             if (isWrapContentWidth) {
-                // 判断目标 SDK 版本是为了对以前 RelativeLayout 的 bug 做兼容。可以看到，这个 bug 就是
-                // 没有考虑子视图的 margin 。读者无视这个兼容吧。下面也有。
+                // 判断目标 SDK 版本是为了对以前 RelativeLayout 的 bug 做兼容。
+                // 可以看到，这个 bug 就是没有考虑子视图的 margin。
                 if (targetSdkVersion < Build.VERSION_CODES.KITKAT) {
                     width = Math.max(width, params.mRight);
                 } else {
-                    // 测量规格模式不是 EXACTLY ，更新为当前值与子视图 right 布局参数 + 其右 margin 的更大者。
+                    // 测量规格模式不是 EXACTLY，更新为
+                    // 当前值与子视图 right 布局参数 + 其右 margin 的更大者。
                     width = Math.max(width, params.mRight + params.rightMargin);
                 }
             }
@@ -471,7 +489,8 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 }
             }
 
-            // 如果需要使用 RelativeLayout 的全局对齐，则更新所有子视图的最左、最右、最上、最下边界。
+            // 如果使用 RelativeLayout 的全局对齐，
+            // 则更新所有子视图的最左、最右、最上、最下边界。
             if (verticalGravity) {
                 left = Math.min(left, params.mLeft - params.leftMargin);
                 top = Math.min(top, params.mTop - params.topMargin);
@@ -488,12 +507,13 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // 对 RelativeLayout 的宽、高做最后的修正，然后为水平、垂直居中的子视图布局。
     // 首先是宽度。
     if (isWrapContentWidth) {
-        // 这里只加了右 padding ，因为之前更新宽度时使用的是子视图的右边界，而计算右边界已经考虑了
-        // RelativeLayout 的左 padding 了。
+        // 这里只加了右 padding ，因为之前更新宽度时使用的是子视图的右边界，
+        // 而计算右边界已经考虑了 RelativeLayout 的左 padding 了。
         width += mPaddingRight;
 
         if (mLayoutParams != null && mLayoutParams.width >= 0) {
-            // 如果为 RelativeLayout 设定了一个固定的宽度，那么取这个设定值与测量值中更大的那一个。
+            // 如果为 RelativeLayout 设定了一个固定的宽度，
+            // 那么取这个设定值与测量值中更大的那一个。
             width = Math.max(width, mLayoutParams.width);
         }
 
@@ -524,7 +544,8 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         }
     }
 
-    // 然后是高度。步骤与宽度完全一致，仅仅是方向发生变化。理解有困难的读者请对照着上面的注释看。
+    // 然后是高度。步骤与宽度完全一致，仅仅是方向发生变化。
+    // 理解有困难的读者请对照着上面的注释看。
     if (isWrapContentHeight) {
         // Height already has top padding in it since it was calculated by looking at
         // the bottom of each child view
@@ -566,11 +587,12 @@ protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 height - mPaddingBottom);
 
         final Rect contentBounds = mContentBounds;
-        // Gravity.apply() 方法会根据传入的对齐属性、传入的宽高、代表可用空间的 Rect 对象
-        // （即 contentBounds），生成对应的计算结果到 contentBounds 中。
-        // 这里，传入的宽高是第二轮子视图测量中维护并更新的所有子视图的最广边界，也即 mContentBounds
-        // 表示的是尺寸刚刚能容纳下所有子视图的一个矩形，它根据对齐属性和尺寸，被妥善地放到了 mSelfBounds 
-        // 的内部。接下来就要使用它的位置来修正所有视图的位置。
+        // Gravity.apply() 方法会根据传入的对齐属性、传入的宽高、代表可用空间的
+        // Rect 对象（即 contentBounds），生成对应的计算结果到 contentBounds 中。
+        // 这里，传入的宽高是第二轮子视图测量中维护并更新的所有子视图的最广边界，也即 
+        // mContentBounds 表示的是尺寸刚刚能容纳下所有子视图的一个矩形，
+        // 它根据对齐属性和尺寸，被妥善地放到了 mSelfBounds 的内部。
+        // 接下来使用它的位置来修正所有视图的位置。
         Gravity.apply(mGravity, right - left, bottom - top, selfBounds, contentBounds,
                 layoutDirection);
 
@@ -621,17 +643,18 @@ private void applyHorizontalSizeRules(LayoutParams childParams, int myWidth, int
         childParams.mRight = anchorParams.mLeft - (anchorParams.leftMargin +
                 childParams.rightMargin);
     } else if (childParams.alignWithParent && rules[LEFT_OF] != 0) {
-        // alignWithParent 是 RelativeLayout 为子视图提供的一个可选属性，它表示如果在某一条边界配置了
-        // 想要对齐目标视图，但却没有找到满足条件的视图（即要么通过直接或间接依赖找到的视图要么可视性均为 
-        // GONE ，要么指定的 ID 根本不存在），那么就令其对齐父 RelativeLayout 。
+        // alignWithParent 是 RelativeLayout 为子视图提供的一个可选属性，
+        // 它表示如果在某一条边界配置了想要对齐目标视图，但却没有找到满足条件的视图
+        // （即要么通过直接或间接依赖找到的视图要么可视性均为 GONE，要么指定的 ID 
+        // 根本不存在），那么就令其对齐父 RelativeLayout 。
         // 这个属性在实际开发中使用得较少。
         if (myWidth >= 0) {
             childParams.mRight = myWidth - mPaddingRight - childParams.rightMargin;
         }
     }
 
-    // 可以看到，接下来的几步都在根据不同的规则重复上面的步骤，现在是尝试将左边界对齐目标视图的右边界
-    // （即 RIGHT_OF 的语义）。
+    // 可以看到，接下来的几步都在根据不同的规则重复上面的步骤，
+    // 现在是尝试将左边界对齐目标视图的右边界（即 RIGHT_OF 的语义）。
     anchorParams = getRelatedViewParams(rules, RIGHT_OF);
     if (anchorParams != null) {
         childParams.mLeft = anchorParams.mRight + (anchorParams.rightMargin +
@@ -680,18 +703,20 @@ private void applyHorizontalSizeRules(LayoutParams childParams, int myWidth, int
 // 在水平方向上测量某一个子视图，在第一轮子视图测量中，完成子视图的布局后调用。
 private void measureChildHorizontal(
         View child, LayoutParams params, int myWidth, int myHeight) {
-    // 根据布局结果，装配宽度测量参数。调用的这个方法是水平、垂直方向通用的，我们单独分析它的实现。
+    // 根据布局结果，装配宽度测量参数。调用的这个方法是水平、垂直方向通用的，
+    // 我们单独分析它的实现。
     final int childWidthMeasureSpec = getChildMeasureSpec(params.mLeft, params.mRight,
             params.width, params.leftMargin, params.rightMargin, mPaddingLeft, mPaddingRight,
             myWidth);
 
-    // 接下来装配高度测量参数。在调用这个方法时， RelativeLayout 还没有做这个子视图在垂直方向上的布局。
-    // 因此生成的高度测量参数很有可能是不正确的，但是这并不影响第一轮测量过程。
+    // 接下来装配高度测量参数。在调用这个方法时， RelativeLayout 还没有做这个子视图
+    // 在垂直方向上的布局，因此生成的高度测量参数很有可能是不正确的，
+    // 但是这并不影响第一轮测量过程。
     final int childHeightMeasureSpec;
  
-    // myHeight 如果小于 0 （即为默认值 -1 ），则说明 RelativeLayout 的高度不定。
+    // myHeight 如果小于 0 （即为默认值 -1），则说明 RelativeLayout 的高度不定。
     if (myHeight < 0) {
-        // 那么，如果这个子视图设置的高度大于 0 ，那就『暂时』让它照设置的那么高。
+        // 那么，如果这个子视图设置的高度大于 0，那就『暂时』让它照设置的那么高。
         if (params.height >= 0) {
             childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(
                     params.height, MeasureSpec.EXACTLY);
@@ -718,7 +743,7 @@ private void measureChildHorizontal(
     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }
 ```
-### `positionChildHorizontal()`
+#### `positionChildHorizontal()`
 ```java
 // 完成子视图水平方向的测量后，确定它的 layout() 方法水平方向参数（实际上就是提前完成布局）。
 // 这个方法的返回值表示该子视图要么水平居中于 RelativeLayout ，要么右对齐于 RelativeLayout 。
@@ -741,18 +766,20 @@ private boolean positionChildHorizontal(View child, LayoutParams params, int myW
         if (rules[CENTER_IN_PARENT] != 0 || rules[CENTER_HORIZONTAL] != 0) {
             // 如果配置了居中属性：
             if (!wrapContent) {
-                // 如果 RelativeLayout 的宽度测量规格模式是 EXACTLY ，即 RelativeLayout 宽度确定，
-                // 则现在就可以根据测得的宽度确定这个视图的位置了。
+                // 如果 RelativeLayout 的宽度测量规格模式是 EXACTLY，即
+                // RelativeLayout 宽度确定，则可以立即根据测得的宽度确定这个视图的位置。
                 centerHorizontal(child, params, myWidth);
             } else {
                 // 否则，现在暂时无法确定居中位置（ RelativeLayout 的宽度尚不确定 ）。
-                // 暂时将这个视图左对齐。在确定了 RelativeLayout 的宽度后，会为它们重新布局。
+                // 暂时将这个视图左对齐。在确定了 RelativeLayout 的宽度后，会为它们
+                // 重新布局。
                 params.mLeft = mPaddingLeft + params.leftMargin;
                 params.mRight = params.mLeft + child.getMeasuredWidth();
             }
             return true;
         } else {
-            // 没有配置居中属性，说明在水平方向，该子视图不受任何规则的约束。执行默认的左对齐。
+            // 没有配置居中属性，说明在水平方向，该子视图不受任何规则的约束。
+            // 执行默认的左对齐。
             params.mLeft = mPaddingLeft + params.leftMargin;
             params.mRight = params.mLeft + child.getMeasuredWidth();
         }
@@ -762,8 +789,8 @@ private boolean positionChildHorizontal(View child, LayoutParams params, int myW
 ```
 #### `applyVerticalSizeRules()`
 ```java
-// 在垂直方向基于设定的规则完成对某一子视图的初步布局。除了被笔者刻意省略的基线规则处理，和没有 RTL 兼容外，
-// 整体流程和水平方向的 applyHorizontal 是高度一致的。注释内容请对照着 applyHorizontalSizeRules 看。
+// 在垂直方向基于设定的规则完成对某一子视图的初步布局。除了被笔者刻意省略的基线规则处理，
+// 和没有 RTL 兼容外，整体流程和水平方向的 applyHorizontal 是高度一致的。
 private void applyVerticalSizeRules(LayoutParams childParams, int myHeight, int myBaseline) {
     final int[] rules = childParams.getRules();
 
@@ -819,16 +846,18 @@ private void applyVerticalSizeRules(LayoutParams childParams, int myHeight, int 
 ```
 #### `measureChild()`
 ```java
-// 这个方法的调用时机是一个子视图水平、垂直方向上的规则均已 apply 之后，此时可以根据规则完全确定
-// 这个子视图的尺寸了，因此对它做第二次测量，修正第一次测量中 *可能* 不正确的高度测量规格。
+// 这个方法的调用时机是一个子视图水平、垂直方向上的规则均已 apply 之后，
+// 此时可以根据规则完全确定这个子视图的尺寸了，因此对它做第二次测量，
+// 修正第一次测量中 *可能* 不正确的高度测量规格。
 private void measureChild(View child, LayoutParams params, int myWidth, int myHeight) {
     int childWidthMeasureSpec = getChildMeasureSpec(params.mLeft,
             params.mRight, params.width,
             params.leftMargin, params.rightMargin,
             mPaddingLeft, mPaddingRight,
             myWidth);
-    // 对比 measureChildHorizontal() 即可发现，这个方法就是直接调用两次 getChildMeasureSpec() ，
-    // 原因已经很清楚了（调用前者时，没有分析水平方向的规则，调用这个方法时，则已分析过了）。
+    // 对比 measureChildHorizontal() 即可发现，这个方法就是直接调用两次 
+    // getChildMeasureSpec()，原因很自然：调用前者时，没有分析水平方向的规则，
+    // 调用这个方法时，则已分析过了
     int childHeightMeasureSpec = getChildMeasureSpec(params.mTop,
             params.mBottom, params.height,
             params.topMargin, params.bottomMargin,
@@ -839,7 +868,8 @@ private void measureChild(View child, LayoutParams params, int myWidth, int myHe
 ```
 #### `getChildMeasureSpec()`
 ```java
-// 这个方法就是 measureChild*() 中调用的装配子视图测量参数的便利方法。它被设计成了水平、垂直方向通用的。
+// 这个方法就是 measureChild*() 中调用的装配子视图测量参数的便利方法。
+// 它被设计成了水平、垂直方向通用的。
 // 注意这个方法的调用时机，此时每个方向上的『二次』布局还没有发生， VALUE_NOT_SET 这个标志
 // 还参与到了子视图的测量过程中。笔者认为，这是一个非常巧妙的设计。
 private int getChildMeasureSpec(int childStart, int childEnd,
@@ -848,10 +878,12 @@ private int getChildMeasureSpec(int childStart, int childEnd,
     int childSpecMode = 0;
     int childSpecSize = 0;
 
-    // mySize 小于 0 即 RelativeLayout 在这个方向上的测量参数规格为 UNSPECIFIED ，大小不受限。
+    // mySize 小于 0 即 RelativeLayout 在这个方向上的测量参数规格为 UNSPECIFIED，
+    // 大小不受限。
     final boolean isUnspecified = mySize < 0;
     if (isUnspecified) {
-        // 如果 RelativeLayout 在这个方向上大小不受限，那就很简单了，子视图在这个方向也可以想要多大就有多大。
+        // 如果 RelativeLayout 在这个方向上大小不受限，那就很简单了，
+        // 子视图在这个方向也可以想要多大就有多大。
         if (childStart != VALUE_NOT_SET && childEnd != VALUE_NOT_SET) {
             // 子视图在该方向起始、终止位置都由规则限定，那就遵照规则限定来。
             childSpecSize = Math.max(0, childEnd - childStart);
@@ -865,17 +897,17 @@ private int getChildMeasureSpec(int childStart, int childEnd,
             childSpecSize = 0;
             childSpecMode = MeasureSpec.UNSPECIFIED;
         } 
-        // 从这一连串判断条件可以看出，为 RelativeLayout 的子视图设定大小时， RelativeLayout
-        // 参照的优先级是：加在这一方向上的规则 > 设定的尺寸。如果规则确定了子视图在这一方向上的位置，
-        // 那么尺寸的设置会在测量过程中忽略。
+        // 从这一连串判断条件可以看出，为 RelativeLayout 的子视图设定大小时，
+        // RelativeLayout 参照的优先级是：加在这一方向上的规则 > 设定的尺寸。
+        // 如果规则确定了子视图在这一方向上的位置，那么尺寸的设置会在测量过程中忽略。
 
         return MeasureSpec.makeMeasureSpec(childSpecSize, childSpecMode);
     }
  
     // 到这里则说明 RelativeLayout 自身在此方向有大小限制。
 
-    // 需要通过这个方向上的规则、子视图想要的大小以及 RelativeLayout 的大小限制三方综合考虑，计算
-    // 子视图的大小。
+    // 需要通过这个方向上的规则、子视图想要的大小以及 RelativeLayout 的大小限制三方综合考虑，
+    // 计算子视图的大小。
     int tempStart = childStart;
     int tempEnd = childEnd;
 
