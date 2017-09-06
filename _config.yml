@@ -12,6 +12,7 @@ redcarpet:
   extensions: ["tables", "fenced_code_blocks", "strikethrough", "with_toc_data", "disable_indented_code_blocks"]
 gems:
   - jekyll-feed
+  - jekyll-relative-links
 exclude:
   - Gemfile
   - Gemfile.lock
